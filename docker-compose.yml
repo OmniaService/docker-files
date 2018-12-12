@@ -1,0 +1,63 @@
+version: "2.1"
+services:
+  omnia-config-service:
+    hostname: omnia-config-service
+    build: config-service
+    ports:
+      - "15000:15000"
+    networks:
+      - omnia
+    healthcheck:
+      test: "exit 0"
+  omnia-discovery-service:
+    hostname: omnia-discovery-service
+    build: eureka-service
+    ports:
+      - "15001:15001"
+    networks:
+      - omnia
+    healthcheck:
+      test: "exit 0"
+    depends_on:
+      omnia-config-service:
+        condition: service_healthy
+  omnia-gateway-service:
+    hostname: omnia-gateway-service
+    build: gateway-service
+    ports:
+      - "12000:12000"
+    networks:
+      - omnia
+    depends_on:
+      omnia-discovery-service:
+        condition: service_healthy
+  omnia-auth-service:
+    hostname: omnia-auth-service
+    build: authentication-service
+    ports:
+      - "14000:14000"
+    networks:
+      - omnia
+    depends_on:
+      - omnia-gateway-service
+  omnia-user-service:
+    hostname: omnia-user-service
+    build: user-service
+    ports:
+      - "15002:15002"
+    networks:
+      - omnia
+    depends_on:
+      - omnia-gateway-service
+  omnia-frontend:
+    hostname: omnia-frontend
+    build: omniafrontend
+    ports:
+      - "80:80"
+    networks:
+      - omnia
+    depends_on:
+      - omnia-gateway-service
+networks:
+  omnia:
+    driver: bridge
